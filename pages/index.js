@@ -4,7 +4,7 @@ import Footer from "@/components/footer";
 
 export default function Layout({ children, metaTitle, metaDescription }){
   return(
-    <div>
+    <>
       <Head>
         <title>{`Create Next App - ${metaTitle}`}</title>
         <meta
@@ -15,9 +15,9 @@ export default function Layout({ children, metaTitle, metaDescription }){
         <link rel="icon" href="/favicon.ico"/>
       </Head>
       <Header />
-      <p>Content</p>
+      <p className="text-3xl font-bold underline">Content</p>
       {children}
       <Footer />
-    </div>
+    </>
   );
 }
