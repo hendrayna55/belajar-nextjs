@@ -1,6 +1,11 @@
+import Link from "next/link";
+
 export default function Menu(){
-    return <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/profile">Profile</a></li>
-    </ul>;
-}
+    return (
+        <ul className="flex gap-5">
+            <li><Link href={"/"}>Home</Link></li>
+            <li><Link href={"/profile"}>Profile</Link></li>
+            <li><Link href={"/users"}>Users</Link></li>
+        </ul>
+    );
+};
