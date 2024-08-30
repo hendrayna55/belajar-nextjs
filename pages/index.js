@@ -1,7 +1,10 @@
-import Layout from "@/layout";
+import Image from "next/image";
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 
 export default function Main({ children }){
+
+  const LayoutComponent = dynamic(() => import("@/layout"))
 
   useEffect(() => {
     fetch("/api/hello")
@@ -12,11 +15,13 @@ export default function Main({ children }){
 
   return(
     <>
-      <Layout 
+      <LayoutComponent 
         metaTitle={"Home"}
       >
         <p>Home</p>
-      </Layout>
+        <Image src={"/logo-juku.png"} width={400} height={400} alt="Logo Image"/>
+        <img src="/logo-juku.png" style={{width: 400, height: 400}} alt="Logo Image"/>
+      </LayoutComponent>
     </>
   );
 }

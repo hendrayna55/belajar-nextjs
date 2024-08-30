@@ -3,7 +3,7 @@
 export default async function handler(req, res) {
   // res.status(200).json({ name: "John Doe" });
   try {
-    const response = await (await fetch('https://dummyjson.com/users')).json();
+    const response = await (await fetch('https://lms.jukugakuincentre.id/api/get-angkatan')).json();
     res.status(200).json({ ... response });
   } catch (error) {
     
