@@ -6,7 +6,7 @@ export default function Layout({children, metaTitle, metaDescription}) {
   return (
     <div>
       <Head>
-        <title>Create Next App - {metaTitle}</title>
+        <title>{`Create Next App - ${metaTitle}`}</title>
         <meta
           name="description"
           content={metaDescription || "Aplikasi Latihan NextJs Hendra"}
