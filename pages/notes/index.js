@@ -8,6 +8,25 @@ export default function Notes() {
     const router = useRouter();
     const [notes, setNotes] = useState();
 
+    const handleDelete = async (id) => {
+        try {
+            const response = await fetch(
+                `https://service.pace-unv.cloud/api/notes/delete/${id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+            const result = await response.json();
+            
+            if (result?.success) {
+                router.reload();
+            }
+            
+        } catch (error) {
+            
+        }
+    };
+
     useEffect(() => {
         async function fetchingData() {
             const res = await fetch("https://service.pace-unv.cloud/api/notes");
@@ -16,9 +35,6 @@ export default function Notes() {
         }
         fetchingData()
     }, []);
-
-    console.log('Data Notes => ', notes);
-    
 
     return (
         <LayoutComponent metaTitle={'Employee'}>
@@ -41,10 +57,10 @@ export default function Notes() {
                                         <CardFooter
                                             justify={"space-between"}
                                             flexWrap={'wrap'}>
-                                            <Button flex={1} variant={'ghost'} >
+                                            <Button flex={1} variant={'ghost'} onClick={() => router.push(`/notes/edit/${item?.id}`)}>
                                                 Edit
                                             </Button>
-                                            <Button flex={1} colorScheme={'red'} >
+                                            <Button onClick={() => handleDelete(item.id)} flex={1} colorScheme={'red'}>
                                                 Delete
                                             </Button>
                                         </CardFooter>

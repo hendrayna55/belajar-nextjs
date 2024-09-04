@@ -20,8 +20,7 @@ export default function AddNotes() {
                 },
                 body: JSON.stringify(notes),
             });
-            const result =await response.json();
-            console.log(result);
+            const result = await response.json();
             
             if (result?.success) {
                 router.push('/notes');
