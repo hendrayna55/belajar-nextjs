@@ -3,31 +3,28 @@ import { Flex, Grid, GridItem, Card, CardBody, CardHeader, CardFooter, Heading, 
 import { useState } from "react";
 import { useRouter } from "next/router";
 const LayoutComponent = dynamic(() => import("@/layout"));
+import { useMutation } from "@/hooks/useMutation";
 
 export default function AddNotes() {
+    const { mutate } = useMutation();
     const router = useRouter();
     const [notes, setNotes] = useState({
         title: '',
         description: '',
     });   
     
-    const handleSubmit = async () => {        
-        try {
-            const response = await fetch("https://service.pace-unv.cloud/api/notes", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(notes),
-            });
-            const result = await response.json();
-            
-            if (result?.success) {
-                router.push('/notes');
-            }
-            
-        } catch (error) {
-            
+    const handleSubmit = async () => {
+        const response = await mutate(
+            { 
+                url: `https://service.pace-unv.cloud/api/notes`,
+                payload: notes,
+            },
+        );
+
+        console.log("response => ", response);
+
+        if (response?.success) {
+            router.push('/notes');
         }
     }
 
