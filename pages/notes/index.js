@@ -1,17 +1,29 @@
 import dynamic from "next/dynamic";
-import { Flex, Grid, GridItem, Card, CardBody, CardHeader, CardFooter, Heading, Text, Button, Box, Spinner } from "@chakra-ui/react";
-import { useState } from "react";
+import { Flex, Grid, GridItem, Card, CardBody, CardHeader, CardFooter, Heading, Text, Button, Box, Spinner, Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalFooter,
+    ModalBody,
+    ModalCloseButton, Input, Textarea, GridItem as ChakraGridItem } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 const LayoutComponent = dynamic(() => import("@/layout"));
-import { useQueries } from "@/hooks/useQueries";
 import fetcher from "@/utils/fetcher";
 import useSWR from "swr";
+import Link from "next/link";
 
 export default function Notes() {
-    // const { data, isLoading } = useQueries({ 
-    //     prefixUrl: `https://service.pace-unv.cloud/api/notes`,
-    // });
+    const router = useRouter();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState(null); // Menyimpan ID note yang akan diedit
+    const [notes, setNotes] = useState({
+        title: '',
+        description: '',
+    });
 
+    // Fetch notes data
     const { data, error, isLoading } = useSWR(
         `https://service.pace-unv.cloud/api/notes`, 
         fetcher,
@@ -19,8 +31,20 @@ export default function Notes() {
             revalidateOnFocus: true,
         }
     );
-    
-    const router = useRouter();
+
+    // Fetch selected note for editing
+    useEffect(() => {
+        if (isEditMode && selectedNoteId) {
+            async function fetchingData() {
+                const res = await fetch(
+                    `https://service.pace-unv.cloud/api/notes/${selectedNoteId}`
+                );
+                const listNotes = await res.json();
+                setNotes(listNotes?.data || {});
+            }
+            fetchingData();
+        }
+    }, [selectedNoteId, isEditMode]);
 
     const handleDelete = async (id) => {
         try {
@@ -37,15 +61,61 @@ export default function Notes() {
             }
             
         } catch (error) {
-            
+            console.error("Failed to delete note:", error);
         }
     };
 
+    const handleSubmit = async () => {
+        const url = isEditMode
+            ? `https://service.pace-unv.cloud/api/notes/update/${selectedNoteId}`
+            : `https://service.pace-unv.cloud/api/notes`;
+
+        const method = isEditMode ? "PATCH" : "POST";
+
+        try {
+            const response = await fetch(
+                url,
+                {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(notes),
+                }
+            );
+            const result = await response.json();
+            
+            if (result?.success) {
+                router.reload();
+            }
+            
+        } catch (error) {
+            console.error("Failed to submit note:", error);
+        }
+        closeModal(); // Close modal after submission
+    };
+
+    const openModal = (id = null) => {
+        if (id) {
+            setSelectedNoteId(id);
+            setIsEditMode(true); // Edit mode
+        } else {
+            setNotes({ title: '', description: '' }); // Reset form for adding
+            setIsEditMode(false); // Add mode
+        }
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedNoteId(null);
+    };
+
     return (
-        <LayoutComponent metaTitle={'Employee'}>
+        <LayoutComponent metaTitle={'Notes'}>
             <Box padding={5}>
                 <Flex justifyContent={'end'}>
-                    <Button colorScheme={'blue'} onClick={() => router.push('notes/add')}>Add Notes</Button>
+                    <Button colorScheme={'blue'} onClick={() => openModal()}>Add Notes</Button>
                 </Flex>
                 {
                     isLoading ? (
@@ -66,7 +136,7 @@ export default function Notes() {
                                         <GridItem key={item.id}>
                                             <Card>
                                                 <CardHeader>
-                                                    <Heading>{item.title}</Heading>
+                                                    <Heading><Link href={`/notes/${item.id}`}>{item.title}</Link></Heading>
                                                 </CardHeader>
                                                 <CardBody>
                                                     <Text>{item.description}</Text>
@@ -74,7 +144,7 @@ export default function Notes() {
                                                 <CardFooter
                                                     justify={"space-between"}
                                                     flexWrap={'wrap'}>
-                                                    <Button flex={1} variant={'ghost'} onClick={() => router.push(`/notes/edit/${item?.id}`)}>
+                                                    <Button flex={1} variant={'ghost'} onClick={() => openModal(item?.id)}>
                                                         Edit
                                                     </Button>
                                                     <Button onClick={() => handleDelete(item.id)} flex={1} colorScheme={'red'}>
@@ -89,6 +159,44 @@ export default function Notes() {
                         </Flex>
                     )
                 }
+
+                {/* Modal for Add/Edit Notes */}
+                <Modal isOpen={isModalOpen} onClose={closeModal}>
+                    <ModalOverlay />
+                    <ModalContent>
+                        <ModalHeader>{isEditMode ? 'Edit Note' : 'Add Note'}</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            <Grid gap={5}>
+                                <ChakraGridItem>
+                                    <Text>Title</Text>
+                                    <Input 
+                                        type="text" 
+                                        value={notes?.title || ""} 
+                                        onChange={(event) => setNotes({ ...notes, title: event.target.value })}
+                                    />
+                                </ChakraGridItem>
+                                <ChakraGridItem>
+                                    <Text>Description</Text>
+                                    <Textarea 
+                                        value={notes?.description || ""} 
+                                        onChange={(event) => setNotes({ ...notes, description: event.target.value })}
+                                    />
+                                </ChakraGridItem>
+                            </Grid>
+                        </ModalBody>
+
+                        <ModalFooter>
+                            <Button colorScheme="blue" mr={3} onClick={closeModal}>
+                                Cancel
+                            </Button>
+                            <Button colorScheme="green" onClick={handleSubmit}>
+                                {isEditMode ? 'Update' : 'Submit'}
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+
             </Box>
         </LayoutComponent>
     )
